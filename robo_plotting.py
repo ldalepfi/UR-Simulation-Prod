@@ -127,11 +127,11 @@ def get_joint_data(df, dfi):
     # Where to represent the joints with a special scatter plot
     pivots = [
         True, False,  # origin, base
-        False, False,  # shoulder
-        False, False,  # elbow
-        False, False,  # w1
-        False, False,  # w2
-        False, False,  # w3
+        True, False,  # shoulder
+        True, False,  # elbow
+        True, False,  # w1
+        True, False,  # w2
+        True, False,  # w3
         False, False,  # print extension
         False, False  # print surface
     ]
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.view_init(elev=-155, azim=-116)
-    ax.plot(path_x, path_y, path_z)
+    ax.plot(path_x, path_y, path_z, 'y--')
     ax.plot(print_x, print_y, print_z, 'r.')
 
     # Coords stack coords
@@ -192,13 +192,13 @@ if __name__ == "__main__":
 
     for side in ["A", "B"]:
         xp1, xp2, xp3, yp, zp, _ = zip(*generate_coords(carton, side=side, perfect=True))
-        kwargs = {"marker": "*", "color": "m" if side == "A" else "y"}
+        kwargs = {"marker": "*", "color": "m" if side == "A" else "g"}
         pc_x1 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
         pc_x2 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
         pc_x3 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
 
-    line, = ax.plot([0], [0], [0])
-    scat, = ax.plot([0], [0], [0], 'x')
+    line, = ax.plot([0], [0], [0], 'b')
+    scat, = ax.plot([0], [0], [0], 'xb')
 
     def onClick(event):
         if event.dblclick:

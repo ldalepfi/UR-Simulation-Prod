@@ -7,7 +7,7 @@
     <field name="output_bit_register_66" type="BOOL"/> <!--MOVING HOME-->
     <field name="output_bit_register_67" type="BOOL"/> <!--HOMED-->
     <field name="output_bit_register_68" type="BOOL"/> <!--PRINTING-->
-    <field name="output_bit_register_74" type="BOOL"/> <!--PROG RUNNIGN-->
+    <field name="output_bit_register_74" type="BOOL"/> <!--PROG RUNNING-->
     <field name="actual_TCP_pose" type="VECTOR6D"/>
     <field name="actual_TCP_speed" type="VECTOR6D"/>
     <field name="target_TCP_speed" type="VECTOR6D"/>
@@ -16,7 +16,7 @@
 
   <recipe key="gantry">
     <field name="input_bit_register_74" type="BOOL"/><!--GANTRY IN POS A-->
-    <field name="input_bit_register_75" type="BOOL"/><!--GANTRY_POS-->
+    <field name="input_bit_register_75" type="BOOL"/><!--GANTRY IN POS B-->
   </recipe>
 
   <recipe key="internal">

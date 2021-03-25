@@ -11,7 +11,6 @@ from functools import reduce
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
 
-# What to do inbetween
 cartons_enum = Enum('cartons', 'frozen_small frozen_large chilled_small chilled_medium chilled_large testing')
 carton = cartons_enum.testing
 
@@ -194,7 +193,7 @@ class UR10_RTDE():
                 self.internal.input_bit_register_65 = 0
                 self.con.send(self.internal)
 
-            if self.record and (not (program_counter % 5)):
+            if self.record and (not (program_counter % 3)):
                 self.rec_positions.append(self.state.actual_TCP_pose)
                 self.rec_joint_angles.append(self.state.actual_q)
                 self.rec_prints.append(self.printing)
