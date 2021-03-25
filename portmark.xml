@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<rtde_config>
+  <recipe key="state">
+    <field name="output_int_register_0" type="INT32"/><!--TASK CURRENT-->
+    <field name="output_bit_register_64" type="BOOL"/><!--TASK ACTIVE-->
+    <field name="output_bit_register_65" type="BOOL"/> <!--TASK DONE-->
+    <field name="output_bit_register_66" type="BOOL"/> <!--MOVING HOME-->
+    <field name="output_bit_register_67" type="BOOL"/> <!--HOMED-->
+    <field name="output_bit_register_68" type="BOOL"/> <!--PRINTING-->
+    <field name="output_bit_register_74" type="BOOL"/> <!--PROG RUNNIGN-->
+    <field name="actual_TCP_pose" type="VECTOR6D"/>
+    <field name="actual_TCP_speed" type="VECTOR6D"/>
+    <field name="target_TCP_speed" type="VECTOR6D"/>
+    <field name="actual_q" type="VECTOR6D"/>
+  </recipe>
+
+  <recipe key="gantry">
+    <field name="input_bit_register_74" type="BOOL"/><!--GANTRY IN POS A-->
+    <field name="input_bit_register_75" type="BOOL"/><!--GANTRY_POS-->
+  </recipe>
+
+  <recipe key="internal">
+    <field name="input_bit_register_64" type="BOOL"/><!--START CONTINUE-->
+    <field name="input_bit_register_65" type="BOOL"/><!--START RETRY-->
+  </recipe>
+
+  <recipe key="home">
+    <field name="input_bit_register_76" type="BOOL"/><!--CANCEL HOME-->
+  </recipe>
+
+  <recipe key="control">
+    <field name="input_int_register_0" type="INT32"/><!--NEXT TASK-->
+  </recipe>
+
+  <recipe key="positions">
+    <field name="input_double_register_0" type="DOUBLE"/><!--X1-->
+    <field name="input_double_register_1" type="DOUBLE"/><!--X2-->
+    <field name="input_double_register_2" type="DOUBLE"/><!--X3-->
+    <field name="input_double_register_3" type="DOUBLE"/><!--Y-->
+    <field name="input_double_register_6" type="DOUBLE"/><!--Z-->
+    <field name="input_double_register_9" type="DOUBLE"/><!--Z MIN-->
+  </recipe>
+</rtde_config>

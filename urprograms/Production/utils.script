@@ -1,0 +1,16 @@
+def Max(a, b):
+  if (a >= b):
+    return a
+  else:
+    return b
+  end
+end
+
+
+def Min(a, b):
+  if (a <= b):
+    return a
+  else:
+    return b
+  end
+end

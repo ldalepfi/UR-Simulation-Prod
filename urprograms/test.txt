@@ -1,0 +1,5 @@
+ Program
+   Robot Program
+     var_1≔p[-0.2,0.2,0.2,0,3.1415,0]
+     MoveJ
+       var_1

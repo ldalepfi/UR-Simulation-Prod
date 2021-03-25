@@ -1,0 +1,506 @@
+def preprod1():
+  step_count_ded58824_2405_4563_8c97_6d6fd6d64b4a = 0.0
+  thread Step_Counter_Thread_2fe1df22_4da8_400c_9b2b_dd55f5d44f28():
+    while (True):
+      step_count_ded58824_2405_4563_8c97_6d6fd6d64b4a = step_count_ded58824_2405_4563_8c97_6d6fd6d64b4a + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_2fe1df22_4da8_400c_9b2b_dd55f5d44f28()
+  set_safety_mode_transition_hardness(1)
+  set_gravity([0.0, 0.0, 9.82])
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_runstate_gp_boolean_output_to_value(74, 3)
+  set_tool_voltage(0)
+  set_tcp(p[0.0,0.0,0.0,0.0,0.0,0.0])
+  set_payload(0.0)
+  global i_last_task=0
+  global i_curr_task=0
+  global Base=p[0.0,0.0,0.0,0.0,0.0,0.0]
+  global stack_a=p[-0.14137530154519934,0.8386886638567186,0.08396104889033652,1.5712595903583884,3.0231827271147806E-4,-3.5889649802770365E-4]
+  global stack_b=p[-0.14129376083067505,0.838735528923205,0.0840756727495184,1.571697410288359,1.7980834580876096E-4,-6.606500355573187E-4]
+  global last_task=1
+  global vision_pos=p[0.37748, 0.69, 0.10001, 0, -3.14152, 0.00007]
+  def SetReference():
+    $ 48 "SetReference" "noBreak"
+    $ 49 "Switch gantry_pos"
+    switch_1 = read_input_integer_register(1)
+    $ 50 "Case 1"
+    if (1 == switch_1):
+      $ 51 "reference≔stack_a_const"
+      global reference=p[-0.14137530154519934,0.8386886638567186,0.08396104889033652,1.5712595903583884,3.0231827271147806E-4,-3.5889649802770365E-4]
+    elif (2 == switch_1):
+      $ 52 "Case 2"
+      $ 53 "reference≔stack_b_const"
+      global reference=p[-0.14129376083067505,0.838735528923205,0.0840756727495184,1.571697410288359,1.7980834580876096E-4,-6.606500355573187E-4]
+    else:
+      $ 54 "Default Case"
+      $ 55 "reference≔stack_a_const"
+      global reference=p[-0.14137530154519934,0.8386886638567186,0.08396104889033652,1.5712595903583884,3.0231827271147806E-4,-3.5889649802770365E-4]
+      $ 56 "Popup: Err: Gantry not in pos"
+      popup("Err: Gantry not in pos", "Warning", True, False, blocking=True)
+    end
+  end
+  def StartTask():
+    $ 57 "StartTask" "noBreak"
+    $ 58 "Set current_task=task"
+    write_output_integer_register(0, read_input_integer_register(0))
+    $ 59 "Set task_active=On"
+    write_output_boolean_register(64, True)
+  end
+  def SetWaypoints():
+    $ 60 "SetWaypoints" "noBreak"
+    $ 61 "Set Ordering"
+    $ 62 "If current_task≟1"
+    if (read_output_integer_register(0) == 1):
+      $ 63 "'Left to right (+ive)'"
+      # 'Left to right (+ive)'
+      $ 64 "xm≔1"
+      global xm=1
+      $ 65 "B1≔p[X1, Y, Z, 0, 0, 0]"
+      global B1=p[read_input_float_register(0), read_input_float_register(3), read_input_float_register(6), 0, 0, 0]
+      $ 66 "B3≔p[X3, Y, Z, 0, 0, 0]"
+      global B3=p[read_input_float_register(2), read_input_float_register(3), read_input_float_register(6), 0, 0, 0]
+    else:
+      $ 67 "ElseIf current_task≟2"
+      if (read_output_integer_register(0) == 2):
+        $ 68 "'Right to left (-ive)'"
+        # 'Right to left (-ive)'
+        $ 69 "xm≔-1"
+        global xm=-1
+        $ 70 "B1≔p[X3, Y, Z, 0, 0, 0]"
+        global B1=p[read_input_float_register(2), read_input_float_register(3), read_input_float_register(6), 0, 0, 0]
+        $ 71 "B3≔p[X1, Y, Z, 0, 0, 0]"
+        global B3=p[read_input_float_register(0), read_input_float_register(3), read_input_float_register(6), 0, 0, 0]
+      end
+    end
+    $ 72 "Calculate Waypoints"
+    $ 73 "runover≔printer_width/2"
+    global runover=printer_width/2
+    $ 74 "PA1_EN≔pose_add(B1, p[-runover*xm, 0, 0, 0, d2r(stack_ry), 0])"
+    global PA1_EN= pose_add (B1, p[-runover*xm, 0, 0, 0,  d2r (stack_ry), 0])
+    $ 75 "PA3_EX≔pose_add(B3, p[+runover*xm, 0, 0, 0, d2r(stack_ry), 0])"
+    global PA3_EX= pose_add (B3, p[+runover*xm, 0, 0, 0,  d2r (stack_ry), 0])
+    $ 76 "Reference Base"
+    $ 77 "var_5≔PA1_EN"
+    global var_5=PA1_EN
+    $ 78 "var_6≔reference"
+    global var_6=reference
+    $ 79 "PA1_EN≔pose_trans(reference, PA1_EN)"
+    global PA1_EN= pose_trans (reference, PA1_EN)
+    $ 80 "PA3_EX≔pose_trans(reference, PA3_EX)"
+    global PA3_EX= pose_trans (reference, PA3_EX)
+    $ 81 "var_7≔PA1_EN"
+    global var_7=PA1_EN
+    $ 82 "var_8≔PA3_EX"
+    global var_8=PA3_EX
+  end
+  def MoveWaypoints():
+    $ 83 "MoveWaypoints" "noBreak"
+    $ 84 "If resume_task"
+    if (resume_task):
+      $ 85 "PA1_EN≔pose_trans(reference, vision_prev)"
+      global PA1_EN= pose_trans (reference, vision_prev)
+    end
+    $ 86 "If homed"
+    if (read_output_boolean_register(67)):
+      $ 87 "Set homed= False "
+      write_output_boolean_register(67,   False  )
+      $ 88 "MoveJ"
+      $ 89 "PA1_EN" "breakAfter"
+      global move_thread_flag_89=0
+      thread move_thread_89():
+        enter_critical
+        move_thread_flag_89 = 1
+        movej(PA1_EN, a=1.3962634015954636, v=1.0471975511965976, r=0.05)
+        move_thread_flag_89 = 2
+        exit_critical
+      end
+      move_thread_flag_89 = 0
+      move_thread_han_89 = run move_thread_89()
+      while (True):
+        if (read_input_boolean_register(76)):
+          kill move_thread_han_89
+          stopj(1.3962634015954636)
+          $ 90 "Until (expression)"
+          break
+        end
+        sleep(1.0E-10)
+        if (move_thread_flag_89 > 1):
+          join move_thread_han_89
+          break
+        end
+        sync()
+      end
+      $ 91 "MoveL"
+      $ 92 "PA3_EX" "breakAfter"
+      global move_thread_flag_92=0
+      thread move_thread_92():
+        enter_critical
+        move_thread_flag_92 = 1
+        movel(pose_trans(Base, PA3_EX), a=1.2, v=1.0)
+        move_thread_flag_92 = 2
+        exit_critical
+      end
+      move_thread_flag_92 = 0
+      move_thread_han_92 = run move_thread_92()
+      while (True):
+        if (read_input_boolean_register(76)):
+          kill move_thread_han_92
+          stopl(1.2)
+          $ 93 "Until (expression)"
+          break
+        end
+        sleep(1.0E-10)
+        if (move_thread_flag_92 > 1):
+          join move_thread_han_92
+          break
+        end
+        sync()
+      end
+    else:
+      $ 94 "ElseIf resume_task"
+      if (resume_task):
+        $ 95 "Set homed= False "
+        write_output_boolean_register(67,   False  )
+        $ 96 "PA1_EN≔pose_trans(reference, vision_prev)"
+        global PA1_EN= pose_trans (reference, vision_prev)
+        $ 97 "MoveL"
+        $ 98 "PA1_EN" "breakAfter"
+        global move_thread_flag_98=0
+        thread move_thread_98():
+          enter_critical
+          move_thread_flag_98 = 1
+          movel(pose_trans(Base, PA1_EN), a=0.6, v=0.25, r=0.05)
+          move_thread_flag_98 = 2
+          exit_critical
+        end
+        move_thread_flag_98 = 0
+        move_thread_han_98 = run move_thread_98()
+        while (True):
+          if (read_input_boolean_register(76)):
+            kill move_thread_han_98
+            stopl(0.6)
+            $ 99 "Until (expression)"
+            break
+          end
+          sleep(1.0E-10)
+          if (move_thread_flag_98 > 1):
+            join move_thread_han_98
+            break
+          end
+          sync()
+        end
+        $ 100 "PA3_EX" "breakAfter"
+        global move_thread_flag_100=0
+        thread move_thread_100():
+          enter_critical
+          move_thread_flag_100 = 1
+          movel(pose_trans(Base, PA3_EX), a=0.6, v=0.25)
+          move_thread_flag_100 = 2
+          exit_critical
+        end
+        move_thread_flag_100 = 0
+        move_thread_han_100 = run move_thread_100()
+        while (True):
+          if (read_input_boolean_register(76)):
+            kill move_thread_han_100
+            stopl(0.6)
+            $ 101 "Until (expression)"
+            break
+          end
+          sleep(1.0E-10)
+          if (move_thread_flag_100 > 1):
+            join move_thread_han_100
+            break
+          end
+          sync()
+        end
+      else:
+        $ 102 "ElseIf last_task≟1 and current_task≟2"
+        if (last_task == 1  and  read_output_integer_register(0) == 2):
+          $ 103 "Set homed= False "
+          write_output_boolean_register(67,   False  )
+          $ 104 "MoveL"
+          $ 105 "PA1_EN" "breakAfter"
+          global move_thread_flag_105=0
+          thread move_thread_105():
+            enter_critical
+            move_thread_flag_105 = 1
+            movel(pose_trans(Base, PA1_EN), a=1.2, v=1.0, r=0.05)
+            move_thread_flag_105 = 2
+            exit_critical
+          end
+          move_thread_flag_105 = 0
+          move_thread_han_105 = run move_thread_105()
+          while (True):
+            if (read_input_boolean_register(76)):
+              kill move_thread_han_105
+              stopl(1.2)
+              $ 106 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_105 > 1):
+              join move_thread_han_105
+              break
+            end
+            sync()
+          end
+          $ 107 "PA3_EX" "breakAfter"
+          global move_thread_flag_107=0
+          thread move_thread_107():
+            enter_critical
+            move_thread_flag_107 = 1
+            movel(pose_trans(Base, PA3_EX), a=1.2, v=1.0)
+            move_thread_flag_107 = 2
+            exit_critical
+          end
+          move_thread_flag_107 = 0
+          move_thread_han_107 = run move_thread_107()
+          while (True):
+            if (read_input_boolean_register(76)):
+              kill move_thread_han_107
+              stopl(1.2)
+              $ 108 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_107 > 1):
+              join move_thread_han_107
+              break
+            end
+            sync()
+          end
+        else:
+          $ 109 "Else" "noBreak"
+          $ 110 "Set homed= False "
+          write_output_boolean_register(67,   False  )
+          $ 111 "MoveL"
+          $ 112 "PA1_EN" "breakAfter"
+          global move_thread_flag_112=0
+          thread move_thread_112():
+            enter_critical
+            move_thread_flag_112 = 1
+            movel(pose_trans(Base, PA1_EN), a=1.2, v=1.0, r=0.05)
+            move_thread_flag_112 = 2
+            exit_critical
+          end
+          move_thread_flag_112 = 0
+          move_thread_han_112 = run move_thread_112()
+          while (True):
+            if (read_input_boolean_register(76)):
+              kill move_thread_han_112
+              stopl(1.2)
+              $ 113 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_112 > 1):
+              join move_thread_han_112
+              break
+            end
+            sync()
+          end
+          $ 114 "PA3_EX" "breakAfter"
+          global move_thread_flag_114=0
+          thread move_thread_114():
+            enter_critical
+            move_thread_flag_114 = 1
+            movel(pose_trans(Base, PA3_EX), a=1.2, v=1.0)
+            move_thread_flag_114 = 2
+            exit_critical
+          end
+          move_thread_flag_114 = 0
+          move_thread_han_114 = run move_thread_114()
+          while (True):
+            if (read_input_boolean_register(76)):
+              kill move_thread_han_114
+              stopl(1.2)
+              $ 115 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_114 > 1):
+              join move_thread_han_114
+              break
+            end
+            sync()
+          end
+        end
+      end
+    end
+    $ 116 "print_enable≔ True "
+    global print_enable=  True  
+    $ 117 "resume_task≔ False "
+    global resume_task=  False  
+    $ 118 "print_enable≔ False "
+    global print_enable=  False  
+  end
+  def FinishTask():
+    $ 119 "FinishTask" "noBreak"
+    $ 120 "last_task≔current_task"
+    global last_task=read_output_integer_register(0)
+    $ 121 "Set task_active=Off"
+    write_output_boolean_register(64, False)
+    $ 122 "Set task_done=On"
+    write_output_boolean_register(65, True)
+    $ 123 "Wait task≟0 or cancel_home"
+    while (not(read_input_integer_register(0) == 0  or  read_input_boolean_register(76))):
+      sync()
+    end
+    $ 124 "Set current_task=0"
+    write_output_integer_register(0, 0)
+    $ 125 "Set task_done=Off"
+    write_output_boolean_register(65, False)
+  end
+  $ 2 "BeforeStart"
+  $ 3 "Config"
+  $ 4 "'The tcp rotation components relative to stack'"
+  # 'The tcp rotation components relative to stack'
+  $ 5 "stack_ry≔-180"
+  global stack_ry=-180
+  $ 6 "printer_width≔0.025"
+  global printer_width=0.025
+  $ 7 "Setup Variables"
+  $ 8 "print_enable≔ False "
+  global print_enable=  False  
+  $ 9 "Folder"
+  $ 10 "tasks_equal≔task≟current_task"
+  global tasks_equal=read_input_integer_register(0) == read_output_integer_register(0)
+  $ 11 "tasks_printing≔task≠0 and current_task≠0"
+  global tasks_printing=read_input_integer_register(0) != 0  and  read_output_integer_register(0) != 0
+  $ 12 "resume_task≔start_continue and tasks_equal and tasks_printing"
+  global resume_task=read_input_boolean_register(64)  and  tasks_equal  and  tasks_printing
+  $ 13 "var_1≔task"
+  global var_1=read_input_integer_register(0)
+  $ 14 "var_2≔current_task"
+  global var_2=read_output_integer_register(0)
+  $ 15 "var_3≔resume_task"
+  global var_3=resume_task
+  $ 16 "vision_prev≔vision_pos"
+  global vision_prev=vision_pos
+  $ 17 "Folder"
+  $ 18 "sp≔get_actual_joint_positions()"
+  global sp= get_actual_joint_positions ()
+  $ 19 "MoveJ"
+  $ 20 "sp" "breakAfter"
+  movej(sp, a=1.3962634015954636, v=1.0471975511965976)
+  $ 21 "Folder"
+  $ 22 "Set task_done=Off"
+  write_output_boolean_register(65, False)
+  $ 23 "Set task_active=Off"
+  write_output_boolean_register(64, False)
+  $ 24 "Set current_task=0"
+  write_output_integer_register(0, 0)
+  $ 25 "Set moving_home=Off"
+  write_output_boolean_register(66, False)
+  $ 26 "Set homed=Off"
+  write_output_boolean_register(67, False)
+  $ 27 "Call SetReference"
+  SetReference()
+  $ 126 "Thread_1"
+  thread Thread_1():
+    while (True):
+      $ 127 "vision_pos≔pose_trans(pose_inv(reference), get_actual_tcp_pose())"
+      global vision_pos= pose_trans ( pose_inv (reference),  get_actual_tcp_pose ())
+      $ 128 "vision_x≔vision_pos[0]"
+      global vision_x=vision_pos[0]
+      $ 129 "If print_enable"
+      if (print_enable):
+        $ 130 "print1≔norm(vision_x - X1) ≤ printer_width/2"
+        global print1=norm(vision_x - read_input_float_register(0))  <=  printer_width/2
+        $ 131 "print2≔norm(vision_x - X2) ≤ printer_width/2"
+        global print2=norm(vision_x - read_input_float_register(1))  <=  printer_width/2
+        $ 132 "print3≔norm(vision_x - X3) ≤ printer_width/2"
+        global print3=norm(vision_x - read_input_float_register(2))  <=  printer_width/2
+        $ 133 "Set printing=print1 or print2 or print3"
+        write_output_boolean_register(68, print1  or  print2  or  print3)
+      end
+      $ 134 "sync()"
+      sync()
+    end
+  end
+  threadId_Thread_1 = run Thread_1()
+  $ 135 "Thread_2"
+  thread Thread_2():
+    while (True):
+      $ 136 "zz_home_set≔cancel_home"
+      global zz_home_set=read_input_boolean_register(76)
+      $ 137 "zz_task_set≔task"
+      global zz_task_set=read_input_integer_register(0)
+      $ 138 "zz_crnt_tsk_set≔current_task"
+      global zz_crnt_tsk_set=read_output_integer_register(0)
+      $ 139 "sync()"
+      sync()
+    end
+  end
+  threadId_Thread_2 = run Thread_2()
+  while (True):
+    $ 28 "Robot Program"
+    $ 29 "If gantry_in_pos"
+    if (read_input_boolean_register(74)):
+      $ 30 "If cancel_home"
+      if (read_input_boolean_register(76)):
+        $ 31 "Set current_task=0"
+        write_output_integer_register(0, 0)
+        $ 32 "Set task_done=Off"
+        write_output_boolean_register(65, False)
+        $ 33 "Set task_active=Off"
+        write_output_boolean_register(64, False)
+        $ 34 "If  not homed"
+        if (  not  read_output_boolean_register(67)):
+          $ 35 "Set moving_home= False "
+          write_output_boolean_register(66,   False  )
+          $ 36 "MoveJ"
+          $ 37 "home" "breakAfter"
+          global move_thread_flag_37=0
+          thread move_thread_37():
+            enter_critical
+            move_thread_flag_37 = 1
+            movej(get_inverse_kin(p[-.154664200041, .501438520064, .168341948079, .124055510300, 2.201070469907, 2.132590514955], qnear=[4.706474781036377, -1.4688380400287073, 2.3797855377197266, -0.8809626738177698, 1.6769092082977295, 1.1984225238848012E-5]), a=1.3962634015954636, v=1.0471975511965976)
+            move_thread_flag_37 = 2
+            exit_critical
+          end
+          move_thread_flag_37 = 0
+          move_thread_han_37 = run move_thread_37()
+          while (True):
+            sleep(1.0E-10)
+            if (move_thread_flag_37 > 1):
+              join move_thread_han_37
+              $ 38 "Until (reached_waypoint)"
+              $ 39 "Set homed=On"
+              write_output_boolean_register(67, True)
+              break
+            end
+            sync()
+          end
+          $ 40 "Set moving_home= True "
+          write_output_boolean_register(66,   True  )
+        end
+      else:
+        $ 41 "ElseIf task≟1 or task≟2"
+        if (read_input_integer_register(0) == 1  or  read_input_integer_register(0) == 2):
+          $ 42 "var_4≔123"
+          global var_4=123
+          $ 43 "Call SetReference"
+          SetReference()
+          $ 44 "Call StartTask"
+          StartTask()
+          $ 45 "Call SetWaypoints"
+          SetWaypoints()
+          $ 46 "Call MoveWaypoints"
+          MoveWaypoints()
+          $ 47 "Call FinishTask"
+          FinishTask()
+        end
+      end
+    end
+  end
+end

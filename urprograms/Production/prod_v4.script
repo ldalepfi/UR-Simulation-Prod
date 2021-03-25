@@ -1,0 +1,606 @@
+def prod_v4():
+  set_gravity([0.0, -1.2026031567627009E-15, -9.82])
+  set_tcp(p[-0.12,-0.0155,0.171,0.0,0.0,0.0])
+  set_payload(1.75, [-0.1, -0.04, 0.01])
+  set_tool_voltage(0)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_safety_mode_transition_hardness(1)
+  step_count_e1f16c9e_c207_4281_9819_37c089f5f695 = 0.0
+  thread Step_Counter_Thread_b7cd0b9f_68a0_4b6a_bb94_98599966884a():
+    while (True):
+      step_count_e1f16c9e_c207_4281_9819_37c089f5f695 = step_count_e1f16c9e_c207_4281_9819_37c089f5f695 + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_b7cd0b9f_68a0_4b6a_bb94_98599966884a()
+  global Base=p[0.0,0.0,0.0,0.0,0.0,0.0]
+  global stack_a=p[-0.5248255250200572,-0.5284374169385081,1.2123978574783925,-1.484264308398049,0.6068351379254189,-0.6065749598559471]
+  global stack_b=p[-0.5414774169528097,-0.5058673807060519,1.26412428543644,-1.489782507816834,0.5593241591641521,-0.580462218488525]
+  rtde_set_watchdog("speed_slider_mask", 10.0, "pause")
+  global last_task=0
+  global print1=  False  
+  global print2=  False  
+  global print3=  False  
+  global print_enable=  False  
+  global vision_pos=p[0,0,0,0,0,0]
+  def PreTask():
+    $ 48 "PreTask" "noBreak"
+    $ 49 "If  not (gantry_in_pos_a xor gantry_in_pos_b)"
+    if (  not  (read_input_boolean_register(5)  xor  read_input_boolean_register(6))):
+      $ 50 "Popup: Err: Gantry not in pos"
+      popup("Err: Gantry not in pos", "Warning", True, False, blocking=True)
+    end
+    $ 51 "If gantry_in_pos_a"
+    if (read_input_boolean_register(5)):
+      $ 52 "reference≔pose_add(stack_b, stack_b_to_ref)"
+      global reference= pose_add (stack_b, stack_b_to_ref)
+    else:
+      $ 53 "ElseIf gantry_in_pos_b"
+      if (read_input_boolean_register(6)):
+        $ 54 "reference≔pose_add(stack_a, stack_a_to_ref)"
+        global reference= pose_add (stack_a, stack_a_to_ref)
+      end
+    end
+    $ 55 "'Where is the miminimum Z relative to current pos'"
+    # 'Where is the miminimum Z relative to current pos'
+    $ 56 "vision_pos_ex≔pose_trans(pose_inv(reference), get_actual_tcp_pose())"
+    global vision_pos_ex= pose_trans ( pose_inv (reference),  get_actual_tcp_pose ())
+    $ 57 "vision_pos_ex≔pose_add(vision_pos_ex, p[0, 0, 2*clearance + Z_MIN/1000 - vision_pos_ex[2], 0, 0, 0])"
+    global vision_pos_ex= pose_add (vision_pos_ex, p[0, 0, 2*clearance + read_input_integer_register(6)/1000 - vision_pos_ex[2], 0, 0, 0])
+    $ 58 "CLEAR≔pose_trans(reference, vision_pos_ex)"
+    global CLEAR= pose_trans (reference, vision_pos_ex)
+  end
+  def MoveHome():
+    $ 59 "MoveHome" "noBreak"
+    $ 60 "Set current_task=0"
+    write_output_integer_register(0, 0)
+    $ 61 "Set task_done=Off"
+    write_output_boolean_register(3, False)
+    $ 62 "Set task_active=Off"
+    write_output_boolean_register(2, False)
+    $ 63 "If  not homed"
+    if (  not  read_output_boolean_register(1)):
+      $ 64 "Set moving_home=On"
+      write_output_boolean_register(0, True)
+      $ 65 "MoveL"
+      $ 66 "Wait: 2.0"
+      sleep(2.0)
+      $ 67 "home" "breakAfter"
+      global move_thread_flag_67=0
+      thread move_thread_67():
+        enter_critical
+        move_thread_flag_67 = 1
+        movel(pose_trans(Base, p[-0.3585273863287797,-0.3745525568107262,0.7634990209927934,-0.6809851524142984,-1.676347047244469,1.750266339878694]), a=0.1, v=0.1, r=0.05)
+        move_thread_flag_67 = 2
+        exit_critical
+      end
+      move_thread_flag_67 = 0
+      move_thread_han_67 = run move_thread_67()
+      while (True):
+        sleep(1.0E-10)
+        if (move_thread_flag_67 > 1):
+          join move_thread_han_67
+          $ 68 "Until (reached_waypoint)"
+          $ 69 "Set homed=On"
+          write_output_boolean_register(1, True)
+          break
+        end
+        sync()
+      end
+      $ 70 "Set moving_home=Off"
+      write_output_boolean_register(0, False)
+    end
+  end
+  def StartTask():
+    $ 71 "StartTask" "noBreak"
+    $ 72 "Set current_task=task"
+    write_output_integer_register(0, read_input_integer_register(0))
+    $ 73 "Set task_active=On"
+    write_output_boolean_register(2, True)
+  end
+  def SetWaypoints():
+    $ 74 "SetWaypoints" "noBreak"
+    $ 75 "Set Ordering"
+    $ 76 "B2≔p[X2/1000, Y/1000, Z/1000, 0, 0, 0]"
+    global B2=p[read_input_integer_register(2)/1000, read_input_integer_register(4)/1000, read_input_integer_register(5)/1000, 0, 0, 0]
+    $ 77 "If current_task≟TE_L2R"
+    if (read_output_integer_register(0) == TE_L2R):
+      $ 78 "'Left to right (+ive)'"
+      # 'Left to right (+ive)'
+      $ 79 "xm≔1"
+      global xm=1
+      $ 80 "B1≔p[X1/1000, Y/1000, Z/1000, 0, 0, 0]"
+      global B1=p[read_input_integer_register(1)/1000, read_input_integer_register(4)/1000, read_input_integer_register(5)/1000, 0, 0, 0]
+      $ 81 "B3≔p[X3/1000, Y/1000, Z/1000, 0, 0, 0]"
+      global B3=p[read_input_integer_register(3)/1000, read_input_integer_register(4)/1000, read_input_integer_register(5)/1000, 0, 0, 0]
+    else:
+      $ 82 "ElseIf current_task≟TE_R2L"
+      if (read_output_integer_register(0) == TE_R2L):
+        $ 83 "'Right to left (-ive)'"
+        # 'Right to left (-ive)'
+        $ 84 "xm≔-1"
+        global xm=-1
+        $ 85 "B1≔p[X3/1000, Y/1000, Z/1000, 0, 0, 0]"
+        global B1=p[read_input_integer_register(3)/1000, read_input_integer_register(4)/1000, read_input_integer_register(5)/1000, 0, 0, 0]
+        $ 86 "B3≔p[X1/1000, Y/1000, Z/1000, 0, 0, 0]"
+        global B3=p[read_input_integer_register(1)/1000, read_input_integer_register(4)/1000, read_input_integer_register(5)/1000, 0, 0, 0]
+      end
+    end
+    $ 87 "Print Area Vars"
+    $ 88 "'Move the print areas relative to given box'"
+    # 'Move the print areas relative to given box'
+    $ 89 "'Do not overrwrite these'"
+    # 'Do not overrwrite these'
+    $ 90 "PA1≔pose_add(B1, box_to_pa_XY)"
+    global PA1= pose_add (B1, box_to_pa_XY)
+    $ 91 "PA2≔pose_add(B2, box_to_pa_XY)"
+    global PA2= pose_add (B2, box_to_pa_XY)
+    $ 92 "PA3≔pose_add(B3, box_to_pa_XY)"
+    global PA3= pose_add (B3, box_to_pa_XY)
+    $ 93 "Calculate Waypoints"
+    $ 94 "PA1_EN≔pose_add(PA1, p[-runover*xm, 0, clearance, 0, d2r(stack_ry), 0])"
+    global PA1_EN= pose_add (PA1, p[-runover*xm, 0, clearance, 0,  d2r (stack_ry), 0])
+    $ 95 "PA3_EX≔pose_add(PA3, p[+runover*xm, 0, clearance, 0, d2r(stack_ry), 0])"
+    global PA3_EX= pose_add (PA3, p[+runover*xm, 0, clearance, 0,  d2r (stack_ry), 0])
+    $ 96 "APPROACH≔pose_add(PA1_EN, p[0, 0, 2*clearance + Z_MIN/1000 - PA1_EN[2], 0, 0, 0])"
+    global APPROACH= pose_add (PA1_EN, p[0, 0, 2*clearance + read_input_integer_register(6)/1000 - PA1_EN[2], 0, 0, 0])
+    $ 97 "Reference Base"
+    $ 98 "PA1_EN≔pose_trans(reference, PA1_EN)"
+    global PA1_EN= pose_trans (reference, PA1_EN)
+    $ 99 "PA3_EX≔pose_trans(reference, PA3_EX)"
+    global PA3_EX= pose_trans (reference, PA3_EX)
+    $ 100 "APPROACH≔pose_trans(reference, APPROACH)"
+    global APPROACH= pose_trans (reference, APPROACH)
+  end
+  def MoveWaypoints():
+    $ 101 "MoveWaypoints" "noBreak"
+    $ 102 "'Minimum z position above entry'"
+    # 'Minimum z position above entry'
+    $ 103 "If homed"
+    if (read_output_boolean_register(1)):
+      $ 104 "MoveL"
+      $ 105 "Set homed= False "
+      write_output_boolean_register(1,   False  )
+      $ 106 "APPROACH" "breakAfter"
+      global move_thread_flag_106=0
+      thread move_thread_106():
+        enter_critical
+        move_thread_flag_106 = 1
+        movel(pose_trans(Base, APPROACH), a=0.1, v=0.1, r=0.01)
+        move_thread_flag_106 = 2
+        exit_critical
+      end
+      move_thread_flag_106 = 0
+      move_thread_han_106 = run move_thread_106()
+      while (True):
+        if (read_input_boolean_register(4)):
+          kill move_thread_han_106
+          stopl(0.1)
+          $ 107 "Until (expression)"
+          break
+        end
+        sleep(1.0E-10)
+        if (move_thread_flag_106 > 1):
+          join move_thread_han_106
+          break
+        end
+        sync()
+      end
+      $ 108 "PA1_EN" "breakAfter"
+      global move_thread_flag_108=0
+      thread move_thread_108():
+        enter_critical
+        move_thread_flag_108 = 1
+        movel(pose_trans(Base, PA1_EN), a=0.1, v=0.1, r=0.01)
+        move_thread_flag_108 = 2
+        exit_critical
+      end
+      move_thread_flag_108 = 0
+      move_thread_han_108 = run move_thread_108()
+      while (True):
+        if (read_input_boolean_register(4)):
+          kill move_thread_han_108
+          stopl(0.1)
+          $ 109 "Until (expression)"
+          break
+        end
+        sleep(1.0E-10)
+        if (move_thread_flag_108 > 1):
+          join move_thread_han_108
+          break
+        end
+        sync()
+      end
+    else:
+      $ 110 "ElseIf resume_task"
+      if (resume_task):
+        $ 111 "'Resume from current position'"
+        # 'Resume from current position'
+        $ 112 "Set homed= False "
+        write_output_boolean_register(1,   False  )
+        $ 113 "resume_task≔ False "
+        global resume_task=  False  
+      else:
+        $ 114 "ElseIf restart_task"
+        if (restart_task):
+          $ 115 "MoveL"
+          $ 116 "Set homed= False "
+          write_output_boolean_register(1,   False  )
+          $ 117 "CLEAR" "breakAfter"
+          global move_thread_flag_117=0
+          thread move_thread_117():
+            enter_critical
+            move_thread_flag_117 = 1
+            movel(pose_trans(Base, CLEAR), a=0.1, v=0.1, r=0.01)
+            move_thread_flag_117 = 2
+            exit_critical
+          end
+          move_thread_flag_117 = 0
+          move_thread_han_117 = run move_thread_117()
+          while (True):
+            if (read_input_boolean_register(4)):
+              kill move_thread_han_117
+              stopl(0.1)
+              $ 118 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_117 > 1):
+              join move_thread_han_117
+              break
+            end
+            sync()
+          end
+          $ 119 "APPROACH" "breakAfter"
+          global move_thread_flag_119=0
+          thread move_thread_119():
+            enter_critical
+            move_thread_flag_119 = 1
+            movel(pose_trans(Base, APPROACH), a=0.1, v=0.1, r=0.01)
+            move_thread_flag_119 = 2
+            exit_critical
+          end
+          move_thread_flag_119 = 0
+          move_thread_han_119 = run move_thread_119()
+          while (True):
+            if (read_input_boolean_register(4)):
+              kill move_thread_han_119
+              stopl(0.1)
+              $ 120 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_119 > 1):
+              join move_thread_han_119
+              break
+            end
+            sync()
+          end
+          $ 121 "PA1_EN" "breakAfter"
+          global move_thread_flag_121=0
+          thread move_thread_121():
+            enter_critical
+            move_thread_flag_121 = 1
+            movel(pose_trans(Base, PA1_EN), a=0.1, v=0.1, r=0.01)
+            move_thread_flag_121 = 2
+            exit_critical
+          end
+          move_thread_flag_121 = 0
+          move_thread_han_121 = run move_thread_121()
+          while (True):
+            if (read_input_boolean_register(4)):
+              kill move_thread_han_121
+              stopl(0.1)
+              $ 122 "Until (expression)"
+              break
+            end
+            sleep(1.0E-10)
+            if (move_thread_flag_121 > 1):
+              join move_thread_han_121
+              break
+            end
+            sync()
+          end
+          $ 123 "restart_task≔ False "
+          global restart_task=  False  
+        else:
+          $ 124 "ElseIf last_task≟TE_L2R and current_task≟TE_R2L and  not restart_task"
+          if (last_task == TE_L2R  and  read_output_integer_register(0) == TE_R2L  and    not  restart_task):
+            $ 125 "MoveL"
+            $ 126 "Set homed= False "
+            write_output_boolean_register(1,   False  )
+            $ 127 "PA1_EN" "breakAfter"
+            global move_thread_flag_127=0
+            thread move_thread_127():
+              enter_critical
+              move_thread_flag_127 = 1
+              movel(pose_trans(Base, PA1_EN), a=0.1, v=0.1, r=0.01)
+              move_thread_flag_127 = 2
+              exit_critical
+            end
+            move_thread_flag_127 = 0
+            move_thread_han_127 = run move_thread_127()
+            while (True):
+              if (read_input_boolean_register(4)):
+                kill move_thread_han_127
+                stopl(0.1)
+                $ 128 "Until (expression)"
+                break
+              end
+              sleep(1.0E-10)
+              if (move_thread_flag_127 > 1):
+                join move_thread_han_127
+                break
+              end
+              sync()
+            end
+          else:
+            $ 129 "Else" "noBreak"
+            $ 130 "MoveL"
+            $ 131 "Set homed= False "
+            write_output_boolean_register(1,   False  )
+            $ 132 "CLEAR" "breakAfter"
+            global move_thread_flag_132=0
+            thread move_thread_132():
+              enter_critical
+              move_thread_flag_132 = 1
+              movel(pose_trans(Base, CLEAR), a=0.1, v=0.1, r=0.01)
+              move_thread_flag_132 = 2
+              exit_critical
+            end
+            move_thread_flag_132 = 0
+            move_thread_han_132 = run move_thread_132()
+            while (True):
+              if (read_input_boolean_register(4)):
+                kill move_thread_han_132
+                stopl(0.1)
+                $ 133 "Until (expression)"
+                break
+              end
+              sleep(1.0E-10)
+              if (move_thread_flag_132 > 1):
+                join move_thread_han_132
+                break
+              end
+              sync()
+            end
+            $ 134 "APPROACH" "breakAfter"
+            global move_thread_flag_134=0
+            thread move_thread_134():
+              enter_critical
+              move_thread_flag_134 = 1
+              movel(pose_trans(Base, APPROACH), a=0.1, v=0.1, r=0.01)
+              move_thread_flag_134 = 2
+              exit_critical
+            end
+            move_thread_flag_134 = 0
+            move_thread_han_134 = run move_thread_134()
+            while (True):
+              if (read_input_boolean_register(4)):
+                kill move_thread_han_134
+                stopl(0.1)
+                $ 135 "Until (expression)"
+                break
+              end
+              sleep(1.0E-10)
+              if (move_thread_flag_134 > 1):
+                join move_thread_han_134
+                break
+              end
+              sync()
+            end
+            $ 136 "PA1_EN" "breakAfter"
+            global move_thread_flag_136=0
+            thread move_thread_136():
+              enter_critical
+              move_thread_flag_136 = 1
+              movel(pose_trans(Base, PA1_EN), a=0.1, v=0.1, r=0.01)
+              move_thread_flag_136 = 2
+              exit_critical
+            end
+            move_thread_flag_136 = 0
+            move_thread_han_136 = run move_thread_136()
+            while (True):
+              if (read_input_boolean_register(4)):
+                kill move_thread_han_136
+                stopl(0.1)
+                $ 137 "Until (expression)"
+                break
+              end
+              sleep(1.0E-10)
+              if (move_thread_flag_136 > 1):
+                join move_thread_han_136
+                break
+              end
+              sync()
+            end
+          end
+        end
+      end
+    end
+    $ 138 "'Move Across'"
+    # 'Move Across'
+    $ 139 "MoveL"
+    $ 140 "print_enable≔ True "
+    global print_enable=  True  
+    $ 141 "PA3_EX" "breakAfter"
+    global move_thread_flag_141=0
+    thread move_thread_141():
+      enter_critical
+      move_thread_flag_141 = 1
+      movel(pose_trans(Base, PA3_EX), a=0.5, v=0.1)
+      move_thread_flag_141 = 2
+      exit_critical
+    end
+    move_thread_flag_141 = 0
+    move_thread_han_141 = run move_thread_141()
+    while (True):
+      if (read_input_boolean_register(4)):
+        kill move_thread_han_141
+        stopl(0.5)
+        $ 142 "Until (expression)"
+        break
+      end
+      sleep(1.0E-10)
+      if (move_thread_flag_141 > 1):
+        join move_thread_han_141
+        break
+      end
+      sync()
+    end
+    $ 143 "print_enable≔ False "
+    global print_enable=  False  
+  end
+  def FinishTask():
+    $ 144 "FinishTask" "noBreak"
+    $ 145 "'Acknowledgement sequence with PLC'"
+    # 'Acknowledgement sequence with PLC'
+    $ 146 "last_task≔current_task"
+    global last_task=read_output_integer_register(0)
+    $ 147 "Set task_active=Off"
+    write_output_boolean_register(2, False)
+    $ 148 "Set task_done=On"
+    write_output_boolean_register(3, True)
+    $ 149 "Wait task≟0 or cancel_home"
+    while (not(read_input_integer_register(0) == 0  or  read_input_boolean_register(4))):
+      sync()
+    end
+    $ 150 "Set current_task=0"
+    write_output_integer_register(0, 0)
+    $ 151 "Set task_done=Off"
+    write_output_boolean_register(3, False)
+  end
+  $ 2 "BeforeStart"
+  $ 3 "Script: readme.script"
+  # SETUP INFO
+  
+  # 1. Configure TCP
+  # 2. Calibrate to vision plane
+  # 3. Set the home position
+  # 4. Set variables at setup
+  
+  # stack_ry - corresponds to tool rotation vector relative to stack
+  # print_width - width of the print label
+  # printer_width - width of the printer head
+  # ramp_distance - how far to reach constant speed
+  # clearance - how far away are we printing from the stack
+  # box_to_PA_XY - box coord to print area
+  # stack_a_to_ref - adjusts the vision plane calibration discrepancies
+  # TE_L2R - Task enum left to right
+  $ 4 "Config"
+  $ 5 "'The tcp rotation components relative to stack'"
+  # 'The tcp rotation components relative to stack'
+  $ 6 "stack_ry≔-180"
+  global stack_ry=-180
+  $ 7 "print_width≔0.04"
+  global print_width=0.04
+  $ 8 "printer_width≔0.125"
+  global printer_width=0.125
+  $ 9 "ramp_dist≔0.05"
+  global ramp_dist=0.05
+  $ 10 "clearance≔0.04"
+  global clearance=0.04
+  $ 11 "box_to_pa_XY≔p[0.0325, -0.05, 0, 0, 0, 0]"
+  global box_to_pa_XY=p[0.0325, -0.05, 0, 0, 0, 0]
+  $ 12 "stack_a_to_ref≔p[0, 0, 0, 0, 0, 0]"
+  global stack_a_to_ref=p[0, 0, 0, 0, 0, 0]
+  $ 13 "stack_b_to_ref≔p[0, 0, 0, 0, 0, 0]"
+  global stack_b_to_ref=p[0, 0, 0, 0, 0, 0]
+  $ 14 "TE_L2R≔1"
+  global TE_L2R=1
+  $ 15 "TE_R2L≔2"
+  global TE_R2L=2
+  $ 16 "Config Calcs"
+  $ 17 "print_range≔(print_width+printer_width)/2"
+  global print_range=(print_width+printer_width)/2
+  $ 18 "runover≔print_range+ramp_dist"
+  global runover=print_range+ramp_dist
+  $ 19 "Restart Checks"
+  $ 20 "var_1≔task"
+  global var_1=read_input_integer_register(0)
+  $ 21 "var_2≔current_task"
+  global var_2=read_output_integer_register(0)
+  $ 22 "tasks_equal≔task≟current_task"
+  global tasks_equal=read_input_integer_register(0) == read_output_integer_register(0)
+  $ 23 "tasks_printing≔task≠0 and current_task≠0 and print_enable"
+  global tasks_printing=read_input_integer_register(0) != 0  and  read_output_integer_register(0) != 0  and  print_enable
+  $ 24 "resume_task≔start_continue and tasks_equal and tasks_printing"
+  global resume_task=read_input_boolean_register(2)  and  tasks_equal  and  tasks_printing
+  $ 25 "restart_task≔start_retry and ( not resume_task) and tasks_printing"
+  global restart_task=read_input_boolean_register(3)  and  (  not  resume_task)  and  tasks_printing
+  $ 26 "print_enable≔ False "
+  global print_enable=  False  
+  $ 27 "Keep current pos as home"
+  $ 28 "sp≔get_actual_joint_positions()"
+  global sp= get_actual_joint_positions ()
+  $ 29 "MoveJ"
+  $ 30 "sp" "breakAfter"
+  movej(sp, a=1.3962634015954636, v=1.0471975511965976)
+  $ 31 "Reset bits"
+  $ 32 "Set task_done=Off"
+  write_output_boolean_register(3, False)
+  $ 33 "Set task_active=Off"
+  write_output_boolean_register(2, False)
+  $ 34 "Set current_task=0"
+  write_output_integer_register(0, 0)
+  $ 35 "Set homed=Off"
+  write_output_boolean_register(1, False)
+  $ 36 "Set moving_home=Off"
+  write_output_boolean_register(0, False)
+  $ 152 "Thread_1"
+  thread Thread_1():
+    while (True):
+      $ 153 "'Monitors X position for printing'"
+      # 'Monitors X position for printing'
+      $ 154 "If print_enable"
+      if (print_enable):
+        $ 155 "vision_pos≔pose_trans(pose_inv(reference), get_actual_tcp_pose())"
+        global vision_pos= pose_trans ( pose_inv (reference),  get_actual_tcp_pose ())
+        $ 156 "print1≔norm(vision_pos[0] - PA1[0]) ≤ print_range"
+        global print1=norm(vision_pos[0] - PA1[0])  <=  print_range
+        $ 157 "print2≔norm(vision_pos[0] - PA2[0]) ≤ print_range"
+        global print2=norm(vision_pos[0] - PA2[0])  <=  print_range
+        $ 158 "print3≔norm(vision_pos[0] - PA3[0]) ≤ print_range"
+        global print3=norm(vision_pos[0] - PA3[0])  <=  print_range
+      end
+      $ 159 "Set printing=(print1 or print2 or print3) and print_enable"
+      write_output_boolean_register(4, (print1  or  print2  or  print3)  and  print_enable)
+      $ 160 "sync()"
+      sync()
+    end
+  end
+  threadId_Thread_1 = run Thread_1()
+  while (True):
+    $ 37 "Robot Program"
+    $ 38 "If gantry_in_pos_a or gantry_in_pos_b"
+    if (read_input_boolean_register(5)  or  read_input_boolean_register(6)):
+      $ 39 "If cancel_home"
+      if (read_input_boolean_register(4)):
+        $ 40 "Call PreTask"
+        PreTask()
+        $ 41 "Call MoveHome"
+        MoveHome()
+      else:
+        $ 42 "ElseIf task≟TE_L2R or task≟TE_R2L"
+        if (read_input_integer_register(0) == TE_L2R  or  read_input_integer_register(0) == TE_R2L):
+          $ 43 "Call PreTask"
+          PreTask()
+          $ 44 "Call StartTask"
+          StartTask()
+          $ 45 "Call SetWaypoints"
+          SetWaypoints()
+          $ 46 "Call MoveWaypoints"
+          MoveWaypoints()
+          $ 47 "Call FinishTask"
+          FinishTask()
+        end
+      end
+    end
+  end
+end
