@@ -2,3 +2,6 @@
 
 
 *.csv
+
+venv/
+Emulator/*

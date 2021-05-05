@@ -6,7 +6,7 @@ This repository contains tools for simulation and path visualisation of the Univ
 [urpgrogams](urprograms) \
 Contains directories for pre-production (simulation) and production (physical) Universal Robot Programs (URP). 
 
-####Error Enumerations
+####Error Codes
 -0: Gantry not locked \
 -1: Gantry double locked \
 -10: Point out of x bounds \
@@ -25,7 +25,7 @@ Before running the portmark.py simulation
 2. Select the operating host address and port {physical=12.10.11.21:30004, simulated=ursim:30004}. The script must properly terminate before re-running to release the socket.
 3. Ensure that the robot is powered on:\
     PHYS) Configure PC to static ip in the same network. Connect ethernet cable between PC and robot. Load PreProd URP, power on.\
-    SIM) Runrrr the [emulator](https://www.universal-robots.com/download/software-cb-series/simulator-non-linux/offline-simulator-cb-series-non-linux-ursim-3150/). Load PreProd URP, power on.
+    SIM) Run the [emulator](https://www.universal-robots.com/download/software-cb-series/simulator-non-linux/offline-simulator-cb-series-non-linux-ursim-3150/). Load PreProd URP, power on.
    
 ## Portmarking 3D Visualisation
 This script uses joint angles with forward kinematics from either simulation or a physical run to visualise the path the robot takes, and IO readings to see where printing has occured. This is  useful for debugging the URP and optimising the path. Displayed speed readings may be used to verify that the velocity is constant during the print cycle.

@@ -14,7 +14,7 @@ def translation_matrix(offset, axis, rads, counter=False):
     if counter:
         rads *= -1
 
-    if axis == 'z':
+    if  axis == 'z':
         return np.array([
             [cos(rads), -sin(rads), 0, x],
             [sin(rads), cos(rads), 0, y],
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.view_init(elev=-155, azim=-116)
-    ax.plot(path_x, path_y, path_z, 'y--')
-    ax.plot(print_x, print_y, print_z, 'r.')
+    ax.plot(path_x, path_y, path_z, 'y--', label="path")
+    ax.plot(print_x, print_y, print_z, 'r.', label="prints")
 
     # Coords stack coords
     def getpcs(cartonpos):
@@ -193,9 +193,18 @@ if __name__ == "__main__":
     for side in ["A", "B"]:
         xp1, xp2, xp3, yp, zp, _ = zip(*generate_coords(carton, side=side, perfect=True))
         kwargs = {"marker": "*", "color": "m" if side == "A" else "g"}
-        pc_x1 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
-        pc_x2 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
-        pc_x3 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
+        #pc_x1 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
+        #pc_x2 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
+        #pc_x3 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
+        pc_x1 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
+        pc_x2 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
+        pc_x3 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
+
+        x1, y1, z1 = zip(*pc_x1)
+        x2, y2, z2 = zip(*pc_x2)
+        x3, y3, z3 = zip(*pc_x3)
+
+        ax.scatter(x1+x2+x3, y1+y2+y3, z1+z2+z3, **kwargs, label=f"Side {side}\n areas")
 
     line, = ax.plot([0], [0], [0], 'b')
     scat, = ax.plot([0], [0], [0], 'xb')
@@ -243,7 +252,7 @@ if __name__ == "__main__":
         scat.set_3d_properties(joint_z)
         return line,
 
-
+    ax.legend(bbox_to_anchor=(1.04,1), loc="upper left")
     fig.canvas.mpl_connect('button_press_event', onClick)
     ani = animation.FuncAnimation(fig, run, data_gen, interval=1, blit=False, init_func=init)
     fig.show()

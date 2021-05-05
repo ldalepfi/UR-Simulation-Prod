@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
 
 cartons_enum = Enum('cartons', 'frozen_small frozen_large chilled_small chilled_medium chilled_large testing')
-carton = cartons_enum.testing
+carton = cartons_enum.frozen_small
 
 class UR10_RTDE():
     keep_running = True
@@ -350,7 +350,7 @@ def generate_coords(stack_format, side="A", perfect=True):
             y_coord += cy
 
         if printing:
-            x_coord = [-1*cx/2 - 40, cx/2-40, 1.5 * cx - 40]
+            x_coord = [-cx/2 - 40, cx/2 - 40, 1.5 * cx - 40]
             z_coord = 0
             coord = x_coord + [y_coord, z_coord, z_coord + 50]
             coords.append(coord)
@@ -373,7 +373,7 @@ if __name__ == "__main__":
 
     # Combine tasks
     task_list = entry_tasks + print_tasks_a + exit_tasks
-    # task_list += entry_tasks + print_tasks_b + exit_tasks
+    #task_list += entry_tasks + print_tasks_b + exit_tasks
     print("TASK QUEUE:")
     for task in task_list:
         print(task)
