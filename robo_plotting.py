@@ -9,6 +9,7 @@ mpl.rcParams['legend.fontsize'] = 10
 
 
 def translation_matrix(offset, axis, rads, counter=False):
+    """Create a translation matrix given an adxis, and rotation"""
     x, y, z, _ = offset
     if counter:
         rads *= -1
@@ -37,6 +38,9 @@ def translation_matrix(offset, axis, rads, counter=False):
 
 
 def get_joint_data(df, dfi):
+    """given a dataframe, and index decipher joint position information. Note this isn't the nicest way to find fwd kinematics"""
+
+
     # setup
     base_axis, base_counter = 'z', False
     shoulder_axis, shoulder_counter = 'y', True
@@ -46,7 +50,7 @@ def get_joint_data(df, dfi):
     w3_axis, w3_counter = 'y', True
 
     # Represent the robot sections
-    origin = [0, 0, 0, 1]
+    origin = [0, 0, 0, 1] # x, y, z, _
     base = [0, 0, 0.038, 1]
     shoulder_vec_a = [0, 0, 0.0893, 1]
     shoulder_vec_b = [0, -0.086, 0, 1]
@@ -151,7 +155,6 @@ def get_speed_data(df, dfi):
     vx, vy, vz, wx, wy, wz = df.iloc[dfi]
     return vx, vy, vz, wx, wy, wz
 
-
 def get_path_print_data(df):
     path_x, path_y, path_z = df.x, df.y, df.z
     print_x, print_y, print_z = path_x[df.print], path_y[df.print],path_z[df.print]
@@ -212,20 +215,14 @@ if __name__ == "__main__":
         if event.dblclick:
             global pause
             pause ^= True
-            msg = "PAUSE" if pause else "PLAY"
-            print(msg)
+            print("PAUSE" if pause else "PLAY")
 
     def data_gen():
         cnt = 0
-        while True:
-            if not pause:
-                if cnt == len(joint_df) - 1:
-                    print("DONE")
-                cnt += 1
-            if cnt >= len(joint_df):
-                break
+        while cnt < len(joint_df):
             yield get_joint_data(joint_df, cnt), get_speed_data(speed_df, cnt), get_pos_data(path_df, cnt)
-
+            if not pause:
+                cnt += 1
 
     def init():
         ax.set_xlabel('X axis')
