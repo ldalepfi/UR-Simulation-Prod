@@ -5,7 +5,6 @@ from math import sin, cos, pi
 import numpy as np
 import matplotlib.animation as animation
 from portmark import generate_coords, carton
-
 mpl.rcParams['legend.fontsize'] = 10
 
 
@@ -190,21 +189,21 @@ if __name__ == "__main__":
         xx, yy, zz, one = tx @ rz @ rx @ np.array(cartonpos + [1])
         return xx, yy, zz
 
-    for side in ["A", "B"]:
-        xp1, xp2, xp3, yp, zp, _ = zip(*generate_coords(carton, side=side, perfect=True))
-        kwargs = {"marker": "*", "color": "m" if side == "A" else "g"}
-        #pc_x1 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
-        #pc_x2 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
-        #pc_x3 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
-        pc_x1 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
-        pc_x2 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
-        pc_x3 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
-
-        x1, y1, z1 = zip(*pc_x1)
-        x2, y2, z2 = zip(*pc_x2)
-        x3, y3, z3 = zip(*pc_x3)
-
-        ax.scatter(x1+x2+x3, y1+y2+y3, z1+z2+z3, **kwargs, label=f"Side {side}\n areas")
+    # for side in ["A", "B"]:
+    #     xp1, xp2, xp3, yp, zp, _ = zip(*generate_coords(carton, side=side, perfect=True))
+    #     kwargs = {"marker": "*", "color": "m" if side == "A" else "g"}
+    #     #pc_x1 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
+    #     #pc_x2 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
+    #     #pc_x3 = [ax.scatter(xx, yy, zz, **kwargs) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
+    #     pc_x1 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp1, yp, zp)]]
+    #     pc_x2 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp2, yp, zp)]]
+    #     pc_x3 = [(xx, yy, zz) for xx, yy, zz in [getpcs([x, y, z]) for x, y, z in zip(xp3, yp, zp)]]
+    #
+    #     x1, y1, z1 = zip(*pc_x1)
+    #     x2, y2, z2 = zip(*pc_x2)
+    #     x3, y3, z3 = zip(*pc_x3)
+    #
+    #     ax.scatter(x1+x2+x3, y1+y2+y3, z1+z2+z3, **kwargs, label=f"Side {side}\n areas")
 
     line, = ax.plot([0], [0], [0], 'b')
     scat, = ax.plot([0], [0], [0], 'xb')

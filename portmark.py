@@ -40,6 +40,7 @@ class UR10_RTDE():
 
     @state.setter
     def state(self, state):
+        """Setter which prints out when some important state has chagned"""
         current_task = state.output_int_register_0
         task_active = state.output_bit_register_64
         task_done = state.output_bit_register_65
@@ -74,9 +75,11 @@ class UR10_RTDE():
         self.__state = state
 
     def __init__(self, robo_host: str, robo_port: int, config_filename: str, record: bool = False):
+        """Create the object with focus on connection and recipes"""
         self.record = record
 
         # get recipes!
+        # For these recipes, see the file portmark.xml
         conf = rtde_config.ConfigFile(config_filename)
         self.state_names, self.state_types = conf.get_recipe('state')
         self.gantry_names, self.gantry_types = conf.get_recipe('gantry')
@@ -85,13 +88,13 @@ class UR10_RTDE():
         self.control_names, self.control_types = conf.get_recipe('control')
         self.positions_names, self.positions_types = conf.get_recipe('positions')
 
-
         # connect, get controller version
         self.con = rtde.RTDE(robo_host, robo_port)
         self.con.connect()
         self.con.get_controller_version()
 
         # setup recipes
+        # These are objcts which get transferred across
         self.con.send_output_setup(self.state_names, self.state_types)
         self.gantry = self.con.send_input_setup(self.gantry_names, self.gantry_types)
         self.internal = self.con.send_input_setup(self.internal_names, self.internal_types)
@@ -110,33 +113,25 @@ class UR10_RTDE():
         print(current_time + ":", *msg)
 
     def add_task(self, task: tuple):
+        """put a task on the queue"""
         self.tasks += [task]
 
-    def set_defaults(self):
-        # Next task
-
-
-        self.internal.input_bit_register_64 = 0
-        self.internal.input_bit_register_65 = 0
-
-        self.home.input_bit_register_76 = 0
-
-        # Control
-        self.control.input_int_register_0 = 0
-
-
     def begin(self):
-        # Start data synchronization
+        """Start data synchronization"""
         if not self.con.send_start():
             sys.exit()
 
     def process(self):
+        """The program main loop"""
         self.begin()
 
+        # Start off by setting some of the important flags
+        # Set gantry to position A
         self.gantry.input_bit_register_74 = 1
         self.gantry.input_bit_register_75 = 0
         self.con.send(self.gantry)
 
+        # Set all position information to zero
         self.positions.input_double_register_0 = 0
         self.positions.input_double_register_1 = 0
         self.positions.input_double_register_2 = 0
@@ -145,15 +140,18 @@ class UR10_RTDE():
         self.positions.input_double_register_9 = 0
         self.con.send(self.positions)
 
+        # Set cancel home
         self.home.input_bit_register_76 = 0
         self.con.send(self.home)
 
+        # Set next task
         self.control.input_int_register_0 = 0
         self.con.send(self.control)
 
-        program_counter = 0
-        control_ack = True
-        home_ack = True
+
+        program_counter = 0 # This count is used to periodically sample robot infor
+        control_ack = True  # Emulates PLC control ack
+        home_ack = True     # Emulates PLC home ack
 
         while True:
             # Check the connection
@@ -162,6 +160,7 @@ class UR10_RTDE():
                 self.writeout("Conn lost")
                 break
 
+            # Restart the program
             if not self.prog_running:
                 next = eval(input("What next? {1: resume, 2: restart, 3: home}"))
                 if next == 1:
@@ -182,6 +181,8 @@ class UR10_RTDE():
                 else:
                     continue
 
+                # Forgot what this is for, potentially takes some time for above command
+                # to restart
                 while not self.prog_running:
                     self.state = self.con.receive()
                     if self.state is None:
@@ -189,10 +190,12 @@ class UR10_RTDE():
                         break
                     time.sleep(0.01)
 
+                # Clear flags
                 self.internal.input_bit_register_64 = 0
                 self.internal.input_bit_register_65 = 0
                 self.con.send(self.internal)
 
+            # Record data
             if self.record and (not (program_counter % 3)):
                 self.rec_positions.append(self.state.actual_TCP_pose)
                 self.rec_joint_angles.append(self.state.actual_q)
@@ -213,7 +216,6 @@ class UR10_RTDE():
 
             if self.prog_running:
                 # Send a task...
-
                 if task_type == "gantry":
                     self.gantry.input_bit_register_74 = task_args[0]
                     self.gantry.input_bit_register_75 = task_args[1]
@@ -233,8 +235,7 @@ class UR10_RTDE():
                     self.writeout("")
                     self.writeout("SENT CONTROL home")
 
-
-                elif (control_ack) and home_ack:
+                elif control_ack and home_ack:
                     if (self.current_task == 0) and (not self.task_active):
                         # Get the next fifo queue
                         # decide what to do
@@ -249,8 +250,6 @@ class UR10_RTDE():
 
                             self.control.input_int_register_0 = task_args[0]
                             self.con.send(self.control)
-
-                            #self.last_task = self.tasks[0:]
                             self.tasks = self.tasks[1:]
 
                             control_ack = False
@@ -273,10 +272,10 @@ class UR10_RTDE():
             program_counter += 1
     
     def wrap_process(self):
+        """Stops the main loop, and writes out data to a csv"""
         self.end()
 
         if self.record:
-            #file_name = "data" + datetime.now().strftime(" %d-%b %H%M") + ".csv"
             file_name = "data.csv"
             print("Writing out to file " + file_name)
             with open(file_name, 'w', newline='') as f:
@@ -290,6 +289,7 @@ class UR10_RTDE():
                     writer.writerow(p + q + v + v_t + [pr])
 
     def end(self):
+        """Close the robot connection"""
         self.internal.input_bit_register_64 = 0
         self.internal.input_bit_register_65 = 0
         self.con.send(self.internal)
@@ -300,6 +300,7 @@ class UR10_RTDE():
 
 
 def print_coord_to_tasks(*print_coords: list, starting: int = 1, alternating: bool = True):
+    """Transforms a list of print_coords to corresponding left/right movement tasks"""
     pts = []
     print_coords_list = list(print_coords) if len(print_coords) > 1 else print_coords[0]
     next_control = starting
@@ -310,8 +311,7 @@ def print_coord_to_tasks(*print_coords: list, starting: int = 1, alternating: bo
     return pts
 
 def generate_coords(stack_format, side="A", perfect=True):
-    # [X1, X2, X3, Y1, Y2, Y3, Z1, Z2, Z3]
-
+    """Generates coordinates [X1, X2, X3, Y1, Y2, Y3, Z1, Z2, Z3] for an enumerated stack_format, and side"""
     # Alternating every other layer
     frozen_config_func = lambda layers, not_flip: \
         [True ^ (not not_flip) if (x + 1) % 2 else False ^ (not not_flip) for x in range(layers)]
@@ -362,18 +362,19 @@ if __name__ == "__main__":
     HOST, PORT = 'ursim', 30004
 
     # What do do for setup/teardown
+    # Tasks are tuples of (task style: String, task arguments: List)
     entry_tasks = [("gantry", [1, 0])]
     exit_tasks = [("home", [1]), ("gantry", [0, 1])]
 
+    # Get tasks for both sides
     print_coords_a = generate_coords(carton, side="A", perfect=True)
     print_tasks_a = print_coord_to_tasks(print_coords_a, alternating=True)
-
     print_coords_b = generate_coords(carton, side="B", perfect=True)
     print_tasks_b = print_coord_to_tasks(print_coords_b, alternating=True)
 
     # Combine tasks
     task_list = entry_tasks + print_tasks_a + exit_tasks
-    #task_list += entry_tasks + print_tasks_b + exit_tasks
+    task_list += entry_tasks + print_tasks_b + exit_tasks
     print("TASK QUEUE:")
     for task in task_list:
         print(task)
